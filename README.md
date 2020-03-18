@@ -18,6 +18,12 @@
 ![MicroBadger Layers (tag)](https://img.shields.io/microbadger/layers/forumi0721/debian-armhf-base/latest)
 ![Docker Pulls](https://img.shields.io/docker/pulls/forumi0721/debian-armhf-base)
 ![Docker Stars](https://img.shields.io/docker/stars/forumi0721/debian-armhf-base)
+#### [debian-x64-base-stable](https://hub.docker.com/r/forumi0721/debian-x64-base-stable/)
+![Docker Image Version (tag latest semver)](https://img.shields.io/docker/v/forumi0721/debian-x64-base-stable/latest)
+![Docker Image Size (tag)](https://img.shields.io/docker/image-size/forumi0721/debian-x64-base-stable/latest)
+![MicroBadger Layers (tag)](https://img.shields.io/microbadger/layers/forumi0721/debian-x64-base-stable/latest)
+![Docker Pulls](https://img.shields.io/docker/pulls/forumi0721/debian-x64-base-stable)
+![Docker Stars](https://img.shields.io/docker/stars/forumi0721/debian-x64-base-stable)
 
 
 
