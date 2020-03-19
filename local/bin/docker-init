@@ -10,7 +10,7 @@ echo "[$(TZ="GMT-9" date '+%Y-%m-%d %H:%M:%S')] ==> OK"
 echo
 
 echo "[$(TZ="GMT-9" date '+%Y-%m-%d %H:%M:%S')] ==> Downloading bootstrap"
-TARGET_ARCH=${TARET_ARCH:-x64}
+TARGET_ARCH=${TARGET_ARCH:-x64}
 mkdir -p /build
 cd /build
 wget --no-check-certificate -q https://bitbucket.org/forumi0721/docker-dist-files/raw/master/image.sh
