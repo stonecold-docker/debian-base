@@ -1,29 +1,19 @@
 # debian-base
+![Docker Pulls](https://img.shields.io/docker/pulls/forumi0721/debian-base)
+![Docker Stars](https://img.shields.io/docker/stars/forumi0721/debian-base)
 
-#### [debian-x64-base](https://hub.docker.com/r/forumi0721/debian-x64-base/)
-![Docker Image Version (tag latest semver)](https://img.shields.io/docker/v/forumi0721/debian-x64-base/latest)
-![Docker Image Size (tag)](https://img.shields.io/docker/image-size/forumi0721/debian-x64-base/latest)
-![MicroBadger Layers (tag)](https://img.shields.io/microbadger/layers/forumi0721/debian-x64-base/latest)
-![Docker Pulls](https://img.shields.io/docker/pulls/forumi0721/debian-x64-base)
-![Docker Stars](https://img.shields.io/docker/stars/forumi0721/debian-x64-base)
-#### [debian-aarch64-base](https://hub.docker.com/r/forumi0721/debian-aarch64-base/)
-![Docker Image Version (tag latest semver)](https://img.shields.io/docker/v/forumi0721/debian-aarch64-base/latest)
-![Docker Image Size (tag)](https://img.shields.io/docker/image-size/forumi0721/debian-aarch64-base/latest)
-![MicroBadger Layers (tag)](https://img.shields.io/microbadger/layers/forumi0721/debian-aarch64-base/latest)
-![Docker Pulls](https://img.shields.io/docker/pulls/forumi0721/debian-aarch64-base)
-![Docker Stars](https://img.shields.io/docker/stars/forumi0721/debian-aarch64-base)
-#### [debian-armhf-base](https://hub.docker.com/r/forumi0721/debian-armhf-base/)
-![Docker Image Version (tag latest semver)](https://img.shields.io/docker/v/forumi0721/debian-armhf-base/latest)
-![Docker Image Size (tag)](https://img.shields.io/docker/image-size/forumi0721/debian-armhf-base/latest)
-![MicroBadger Layers (tag)](https://img.shields.io/microbadger/layers/forumi0721/debian-armhf-base/latest)
-![Docker Pulls](https://img.shields.io/docker/pulls/forumi0721/debian-armhf-base)
-![Docker Stars](https://img.shields.io/docker/stars/forumi0721/debian-armhf-base)
-#### [debian-x64-base-stable](https://hub.docker.com/r/forumi0721/debian-x64-base-stable/)
-![Docker Image Version (tag latest semver)](https://img.shields.io/docker/v/forumi0721/debian-x64-base-stable/latest)
-![Docker Image Size (tag)](https://img.shields.io/docker/image-size/forumi0721/debian-x64-base-stable/latest)
-![MicroBadger Layers (tag)](https://img.shields.io/microbadger/layers/forumi0721/debian-x64-base-stable/latest)
-![Docker Pulls](https://img.shields.io/docker/pulls/forumi0721/debian-x64-base-stable)
-![Docker Stars](https://img.shields.io/docker/stars/forumi0721/debian-x64-base-stable)
+
+
+----------------------------------------
+### x64
+![Docker Image Version](https://img.shields.io/docker/v/forumi0721/debian-base/latest)
+![Docker Image Size](https://img.shields.io/docker/image-size/forumi0721/debian-base/latest)
+### aarch64
+![Docker Image Version](https://img.shields.io/docker/v/forumi0721/debian-base/aarch64)
+![Docker Image Size](https://img.shields.io/docker/image-size/forumi0721/debian-base/aarch64)
+### x64_stable
+![Docker Image Version](https://img.shields.io/docker/v/forumi0721/debian-base-stable/x64stable)
+![Docker Image Size](https://img.shields.io/docker/image-size/forumi0721/debian-base-stable/x64stable)
 
 
 
@@ -31,7 +21,7 @@
 #### Description
 
 * Distribution : [Debian GNU/Linux](https://www.debian.org/)
-* Architecture : x64,aarch64,armhf
+* Architecture : x64,aarch64
 * Appplication : -
 
 
@@ -41,7 +31,7 @@
 
 ```sh
 docker run -i -t --rm \
-           forumi0721/debian-[ARCH]-base:latest
+           forumi0721/debian-base:[ARCH_TAG]
 ```
 
 
@@ -50,14 +40,14 @@ docker run -i -t --rm \
 #### Usage
 
 ```dockerfile
-FROM forumi0721/debian-[ARCH]-base:latest
+FROM forumi0721/debian-base:[ARCH_TAG]
 
-#For cross compile on dockerhub (aarch64,armhf)
+#For cross compile on dockerhub (aarch64)
 RUN ["docker-build-start"]
 
 RUN 'build-code'
 
-#For cross compile on dockerhub  (aarch64,armhf)
+#For cross compile on dockerhub  (aarch64)
 RUN ["docker-build-end"]
 ```
 
