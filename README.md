@@ -12,8 +12,8 @@
 ![Docker Image Version](https://img.shields.io/docker/v/forumi0721/debian-base/aarch64)
 ![Docker Image Size](https://img.shields.io/docker/image-size/forumi0721/debian-base/aarch64)
 ### x64_stable
-![Docker Image Version](https://img.shields.io/docker/v/forumi0721/debian-base-stable/x64stable)
-![Docker Image Size](https://img.shields.io/docker/image-size/forumi0721/debian-base-stable/x64stable)
+![Docker Image Version](https://img.shields.io/docker/v/forumi0721/debian-base/x64stable)
+![Docker Image Size](https://img.shields.io/docker/image-size/forumi0721/debian-base/x64stable)
 
 
 
