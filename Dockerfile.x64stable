@@ -16,7 +16,7 @@ FROM scratch
 
 LABEL maintainer="forumi0721@gmail.com"
 
-COPY --from=builder /build/dist/dist-debian-x64-stable /
+COPY --from=builder /build/dist/dist-debian-x64stable /
 
 #RUN ["docker-build-start"]
 
