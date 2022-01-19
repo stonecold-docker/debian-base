@@ -12,7 +12,3 @@ manifests:
     platform:
       architecture: arm
       os: linux
-  - image: forumi0721/debian-base:x64stable
-    platform:
-      architecture: amd64
-      os: linux
