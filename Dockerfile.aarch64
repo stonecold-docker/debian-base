@@ -1,28 +1,22 @@
-ARG BUILD_TAG=latest
+ARG BASE_TAG=x64
 
-FROM forumi0721/alpine-base:${BUILD_TAG} as builder
-
-LABEL maintainer="forumi0721@gmail.com"
-
-ENV TARGET_ARCH=aarch64
-
-COPY local/. /usr/local/
-
-RUN ["docker-init"]
-
-
-
-FROM scratch
+FROM forumi0721/alpine-base:${BASE_TAG} as builder
 
 LABEL maintainer="forumi0721@gmail.com"
 
-COPY --from=builder /build/dist/dist-debian-aarch64 /
+ARG BUILD_TAG=aarch64
 
-RUN ["docker-build-start"]
+COPY local/bin/docker-build /usr/local/bin/
 
-RUN ["docker-init"]
+RUN ["docker-build"]
 
-RUN ["docker-build-end"]
+
+
+FROM forumi0721/scratch:aarch64
+
+LABEL maintainer="forumi0721@gmail.com"
+
+COPY --from=builder /output/. /
 
 ENTRYPOINT ["docker-run"]
 
