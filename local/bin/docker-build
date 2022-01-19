@@ -28,8 +28,8 @@ echo
 
 echo "[$(TZ="GMT-9" date '+%Y-%m-%d %H:%M:%S')] ==> Executing bootstrap"
 cd /build
-if [ "${TARGET_ARCH}" = "x64stable" ]; then
-	./imagex.sh -d debian -a ${BUILD_TAG:-x64} -e stable -q
+if [ "${BUILD_TAG}" = "x64stable" ]; then
+	./imagex.sh -d debian -a x64 -e stable -q
 else
 	./imagex.sh -d debian -a ${BUILD_TAG:-x64} -q
 fi
