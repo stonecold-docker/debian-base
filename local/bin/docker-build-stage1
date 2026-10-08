@@ -1,0 +1,175 @@
+#!/bin/sh
+
+set -e
+
+echo "[$(TZ="GMT-9" date '+%Y-%m-%d %H:%M:%S')] ==> Installing required packages"
+PKG_LIB=""
+#PKG_DEV="debootstrap perl bash git grep util-linux losetup e2fsprogs zstd busybox-static tzdata"
+PKG_DEV="debootstrap bash grep util-linux losetup e2fsprogs zstd busybox-static tzdata"
+docker-install -r -u ${PKG_LIB} ${PKG_DEV}
+echo "[$(TZ="GMT-9" date '+%Y-%m-%d %H:%M:%S')] ==> OK"
+echo
+
+echo "[$(TZ="GMT-9" date '+%Y-%m-%d %H:%M:%S')] ==> Executing bootstrap"
+#config
+TARGET_OUTPUT="/output"
+TARGET_TIMEZONE="Asia/Seoul"
+TARGET_LOCALE="ko_KR.UTF-8"
+
+DEBIAN_EDITION="${BUILD_EDITION:-latest}"
+if [ "${DEBIAN_EDITION}" = "latest" ]; then
+	DEBIAN_EDITION="$(wget -q -O - https://deb.debian.org/debian/dists/stable/Release | sed -n 's/^Codename: //p')"
+fi
+DEBIAN_ARCH="$(uname -m | sed -e 's/x86_64/amd64/g' -e 's/aarch64/arm64/g')"
+DEBIAN_MIRROR="https://http.krfoss.org/debian/"
+DEBIAN_SEC_MIRROR="https://http.krfoss.org/debian-security/"
+DEBIAN_BOOTSTRAP_MIRROR="https://mirror.krfoss.org/debian"
+DEBIAN_COMPONENTS="main contrib non-free non-free-firmware"
+
+echo "Current version : ${DEBIAN_EDITION}"
+
+#debootstrap 1st
+echo "debootstrap 1st"
+DEBIAN_OPTION="--variant=minbase"
+if [ ! -z "${DEBIAN_EXTRA}" ]; then
+	DEBIAN_OPTION="${DEBIAN_OPTION} --include=busybox,locales,${DEBIAN_EXTRA}"
+else
+	DEBIAN_OPTION="${DEBIAN_OPTION} --include=busybox,locales"
+fi
+DEBIAN_OPTION="${DEBIAN_OPTION} --components=${DEBIAN_COMPONENTS// /,}"
+DEBIAN_OPTION="${DEBIAN_OPTION} --merged-usr"
+DEBIAN_OPTION="--arch=${DEBIAN_ARCH} ${DEBIAN_OPTION} --exclude=bsdutils,e2fslibs,e2fsprogs,gzip,libcomerr2,lsb-base,mount,sed,sysvinit-utils,systemd"
+PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" LANG=C LC_ALL=C DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true debootstrap --foreign ${DEBIAN_OPTION} ${DEBIAN_EDITION} "${TARGET_OUTPUT}" ${DEBIAN_BOOTSTRAP_MIRROR}
+
+#Fetch busybox
+echo "fetch busybox"
+cp /bin/busybox.static ${TARGET_OUTPUT}/bin/busybox
+PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" LANG=C LC_ALL=C DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true chroot ${TARGET_OUTPUT} /bin/busybox --install -s
+
+#debootstrap 2nd
+echo "debootstrap 2nd"
+PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" LANG=C LC_ALL=C DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true chroot ${TARGET_OUTPUT} /bin/sh -c "/debootstrap/debootstrap --second-stage"
+
+#debootstrap 3rd
+echo "debootstrap 3rd"
+PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" LANG=C LC_ALL=C DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true chroot ${TARGET_OUTPUT} /bin/sh -c "/usr/bin/dpkg --configure -a"
+
+#resolve
+echo "resolv.conf"
+cat <<- EOF > ${TARGET_OUTPUT}/etc/resolv.conf
+nameserver 1.1.1.1
+nameserver 1.0.0.1
+EOF
+
+#Mirror
+echo "mirror"
+rm -rf ${TARGET_OUTPUT}/etc/apt/sources.list
+cat <<- EOF > ${TARGET_OUTPUT}/etc/apt/sources.list.d/debian.sources
+Types: deb deb-src
+URIs: ${DEBIAN_MIRROR}
+Suites: ${DEBIAN_EDITION} ${DEBIAN_EDITION}-updates ${DEBIAN_EDITION}-backports
+Components: ${DEBIAN_COMPONENTS}
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+EOF
+
+if [ "${DEBIAN_EDITION}" != "stable" -a "${DEBIAN_EDITION}" != "oldstable" -a "${DEBIAN_EDITION}" != "testing" -a "${DEBIAN_EDITION}" != "unstable" -a "${DEBIAN_EDITION}" != "sid" ]; then
+	cat <<- EOF >> ${TARGET_OUTPUT}/etc/apt/sources.list.d/debian.sources
+
+	Types: deb deb-src
+	URIs: ${DEBIAN_SEC_MIRROR}
+	Suites: ${DEBIAN_EDITION}-security
+	Components: ${DEBIAN_COMPONENTS}
+	Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+	EOF
+fi
+
+#docker
+mkdir -p ${TARGET_OUTPUT}/run/systemd
+echo 'docker' > ${TARGET_OUTPUT}/run/systemd/container
+
+# https://github.com/docker/docker/blob/9a9fc01af8fb5d98b8eec0740716226fadb3735c/contrib/mkimage/debootstrap#L40-L48
+echo '#!/bin/sh' > ${TARGET_OUTPUT}/usr/sbin/policy-rc.d
+echo 'exit 101' >> ${TARGET_OUTPUT}/usr/sbin/policy-rc.d
+chmod +x ${TARGET_OUTPUT}/usr/sbin/policy-rc.d
+
+# https://github.com/docker/docker/blob/9a9fc01af8fb5d98b8eec0740716226fadb3735c/contrib/mkimage/debootstrap#L54-L56
+PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" LANG=C LC_ALL=C DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true chroot ${TARGET_OUTPUT} /bin/sh -c "dpkg-divert --local --rename --add /sbin/initctl ; cp -a /usr/sbin/policy-rc.d /sbin/initctl ; sed -i -e 's/^exit.*/exit 0/' /sbin/initctl"
+
+#apt
+if strings "${TARGET_OUTPUT}/usr/bin/dpkg" | grep -q unsafe-io; then
+	# force dpkg not to call sync() after package extraction (speeding up installs)
+	cat > "${TARGET_OUTPUT}/etc/dpkg/dpkg.cfg.d/docker-apt-speedup" <<-'EOF'
+	force-unsafe-io
+	EOF
+fi
+
+if [ -d "${TARGET_OUTPUT}/etc/apt/apt.conf.d" ]; then
+	# _keep_ us lean by effectively running "apt-get clean" after every install
+	aptGetClean='"rm -f /core /*.core /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true";'
+	cat > "${TARGET_OUTPUT}/etc/apt/apt.conf.d/docker-clean" <<-EOF
+	DPkg::Post-Invoke { ${aptGetClean} };
+	APT::Update::Post-Invoke { ${aptGetClean} };
+
+	Dir::Cache::pkgcache "";
+	Dir::Cache::srcpkgcache "";
+	EOF
+
+	cat > "${TARGET_OUTPUT}/etc/apt/apt.conf.d/docker-no-check-valid" <<-'EOF'
+	Acquire::Check-Valid-Until "0";
+	EOF
+
+	cat > "${TARGET_OUTPUT}/etc/apt/apt.conf.d/docker-no-languages" <<-'EOF'
+	Acquire::Languages "none";
+	EOF
+
+	cat > "${TARGET_OUTPUT}/etc/apt/apt.conf.d/docker-gzip-indexes" <<-'EOF'
+	Acquire::GzipIndexes "true";
+	Acquire::CompressionTypes::Order:: "gz";
+	EOF
+
+	cat > "${TARGET_OUTPUT}/etc/apt/apt.conf.d/docker-autoremove-recommends-suggests" <<- 'EOF'
+	APT::Install-Recommends "false";
+	APT::Install-Suggests "false";
+	EOF
+fi
+cat <<- EOF > "${TARGET_OUTPUT}/etc/profile.d/debconf.sh"
+export DEBIAN_FRONTEND=noninteractive
+export DEBCONF_NONINTERACTIVE_SEEN=true
+EOF
+chmod 755 "${TARGET_OUTPUT}/etc/profile.d/debconf.sh"
+
+#locale
+if [ -e "${TARGET_OUTPUT}/usr/sbin/locale-gen" ]; then
+	sed -i -e "s/#*[ ]*${TARGET_LOCALE}/${TARGET_LOCALE}/g" ${TARGET_OUTPUT}/etc/locale.gen
+	sed -i -e "s/#*[ ]*en_US.UTF-8/en_US.UTF-8/g" ${TARGET_OUTPUT}/etc/locale.gen
+	PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" LANG=C LC_ALL=C DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true chroot ${TARGET_OUTPUT} /bin/sh -c "/usr/sbin/locale-gen"
+	echo "LANG=${TARGET_LOCALE}" >> ${TARGET_OUTPUT}/etc/default/locale
+	echo "LANGUAGE=${TARGET_LOCALE}" >> ${TARGET_OUTPUT}/etc/default/locale
+	echo "LC_ALL=${TARGET_LOCALE}" >> ${TARGET_OUTPUT}/etc/default/locale
+fi
+
+#timezone
+if [ -e ${TARGET_OUTPUT}/usr/share/zoneinfo/${TARGET_TIMEZONE} ]; then
+	echo "${TARGET_TIMEZONE}" > ${TARGET_OUTPUT}/etc/timezone
+	rm -rf ${TARGET_OUTPUT}/etc/localtime
+	ln -sf /usr/share/zoneinfo/${TARGET_TIMEZONE} ${TARGET_OUTPUT}/etc/localtime
+elif [ -e /usr/share/zoneinfo/${TARGET_TIMEZONE} ]; then
+	echo "${TARGET_TIMEZONE}" > ${TARGET_OUTPUT}/etc/timezone
+	rm -rf ${TARGET_OUTPUT}/etc/localtime
+	cp /usr/share/zoneinfo/${TARGET_TIMEZONE} ${TARGET_OUTPUT}/etc/localtime
+fi
+
+#skel
+if [ -e ${TARGET_OUTPUT}/etc/skel ]; then
+	cp -ar ${TARGET_OUTPUT}/etc/skel/. ${TARGET_OUTPUT}/root/
+fi
+
+#script
+cp /usr/local/bin/docker-install.deb ${TARGET_OUTPUT}/usr/local/bin/docker-install
+cp /usr/local/bin/docker-adduser ${TARGET_OUTPUT}/usr/local/bin/
+cp /usr/local/bin/docker-chown ${TARGET_OUTPUT}/usr/local/bin/
+cp /usr/local/bin/docker-run ${TARGET_OUTPUT}/usr/local/bin/
+
+echo "[$(TZ="GMT-9" date '+%Y-%m-%d %H:%M:%S')] ==> OK"
+echo
+
