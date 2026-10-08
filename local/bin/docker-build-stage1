@@ -28,6 +28,13 @@ DEBIAN_COMPONENTS="main contrib non-free non-free-firmware"
 
 echo "Current version : ${DEBIAN_EDITION}"
 
+#podman workaround
+if ! mknod /tmp/test-dev-null c 1 3 2>/dev/null; then
+	export container=lxc
+else
+	rm -f /tmp/test-dev-null
+fi
+
 #debootstrap 1st
 echo "debootstrap 1st"
 DEBIAN_OPTION="--variant=minbase"
