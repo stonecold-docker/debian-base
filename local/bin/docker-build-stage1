@@ -4,7 +4,6 @@ set -e
 
 echo "[$(TZ="GMT-9" date '+%Y-%m-%d %H:%M:%S')] ==> Installing required packages"
 PKG_LIB=""
-#PKG_DEV="debootstrap perl bash git grep util-linux losetup e2fsprogs zstd busybox-static tzdata"
 PKG_DEV="debootstrap bash grep util-linux losetup e2fsprogs zstd busybox-static tzdata"
 docker-install -r -u ${PKG_LIB} ${PKG_DEV}
 echo "[$(TZ="GMT-9" date '+%Y-%m-%d %H:%M:%S')] ==> OK"
@@ -68,7 +67,7 @@ nameserver 1.1.1.1
 nameserver 1.0.0.1
 EOF
 
-#Mirror
+#mirror
 echo "mirror"
 rm -rf ${TARGET_OUTPUT}/etc/apt/sources.list
 cat <<- EOF > ${TARGET_OUTPUT}/etc/apt/sources.list.d/debian.sources
