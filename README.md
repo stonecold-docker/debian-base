@@ -5,14 +5,10 @@
 
 
 ----------------------------------------
-### x64
-![Docker Image Size](https://img.shields.io/docker/image-size/forumi0721/debian-base/x64)
-### aarch64
-![Docker Image Size](https://img.shields.io/docker/image-size/forumi0721/debian-base/aarch64)
-### armv7
-![Docker Image Size](https://img.shields.io/docker/image-size/forumi0721/debian-base/armv7)
-### x64_stable
-![Docker Image Size](https://img.shields.io/docker/image-size/forumi0721/debian-base/x64stable)
+### amd64
+![Docker Image Size (tag)](https://img.shields.io/docker/image-size/forumi0721/debian-base/latest?arch=amd64)
+### arm64
+![Docker Image Size (tag)](https://img.shields.io/docker/image-size/forumi0721/debian-base/latest?arch=arm64)
 
 
 
@@ -20,8 +16,8 @@
 #### Description
 
 * Distribution : [Debian GNU/Linux](https://www.debian.org/)
-* Architecture : x64,aarch64,armv7
-* Appplication : -
+* Architecture : amd64, arm64
+* Application : -
 
 
 
@@ -30,7 +26,7 @@
 
 ```sh
 docker run -i -t --rm \
-           forumi0721/debian-base:[ARCH_TAG]
+           forumi0721/debian-base:latest
 ```
 
 
@@ -39,7 +35,7 @@ docker run -i -t --rm \
 #### Usage
 
 ```dockerfile
-FROM forumi0721/debian-base:[ARCH_TAG]
+FROM forumi0721/debian-base:latest
 
 RUN 'build-code'
 ```
