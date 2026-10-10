@@ -20,8 +20,8 @@ if [ "${DEBIAN_EDITION}" = "latest" ]; then
 	DEBIAN_EDITION="$(wget -q -O - https://deb.debian.org/debian/dists/stable/Release | sed -n 's/^Codename: //p')"
 fi
 DEBIAN_ARCH="$(uname -m | sed -e 's/x86_64/amd64/g' -e 's/aarch64/arm64/g')"
-DEBIAN_MIRROR="https://http.krfoss.org/debian/"
-DEBIAN_SEC_MIRROR="https://http.krfoss.org/debian-security/"
+DEBIAN_MIRROR="http://http.krfoss.org/debian/"
+DEBIAN_SEC_MIRROR="http://http.krfoss.org/debian-security/"
 DEBIAN_BOOTSTRAP_MIRROR="http://ftp.kr.debian.org/debian/"
 DEBIAN_COMPONENTS="main contrib non-free non-free-firmware"
 
